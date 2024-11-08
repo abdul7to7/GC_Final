@@ -94,7 +94,6 @@ module.exports = (io) => {
     socket.on(
       "sendGroupMessage",
       async ({ groupId, token, content, isFile, fileKey }) => {
-        console.log("fileKey backend socket", fileKey);
         const user = await verifyUserToken(token);
 
         if (!user) return socket.emit("error", { message: "Invalid token" });
@@ -104,8 +103,6 @@ module.exports = (io) => {
             message: "Join the group before sending messages",
           });
         }
-
-        console.log(`here ${groupId}`);
 
         try {
           let res = await postGroupMessage({
@@ -120,10 +117,6 @@ module.exports = (io) => {
               .to(groupId)
               .emit("error", { message: "Failed to send group message." });
 
-          // let fileuploaded;
-          // if (file?.data) {
-          //   fileuploaded = await fileOperations.fileUpload(file, res.id, null);
-          // }
           let url;
           if (isFile) {
             url = await getDownloadUrl({ fileKey });

@@ -17,66 +17,67 @@
           <h2>My Groups</h2>
           <ui id="user_groups_list"></ui>
         </div>
-        <div id="create_group" class="flex_c red_border_1">
+        <div id="manage_groups">
           <h2>Manage Groups</h2>
-          <button id="create_group_section_btn">Create a new Group</button>
-          <div id="create_group_section" style="display: none">
-            <input
-              id="new_group_name"
-              type="text"
-              placeholder="enter name"
-              name="new_group_name"
-            />
-            <button id="create_group_btn">Create</button>
+          <div id="create_group" class="flex_c red_border_1">
+            <button id="create_group_section_btn">Create a new Group</button>
+            <div id="create_group_section" style="display: none">
+              <input
+                id="new_group_name"
+                type="text"
+                placeholder="enter name"
+                name="new_group_name"
+              />
+              <button id="create_group_btn">Create</button>
+            </div>
           </div>
-        </div>
-        <div id="delete_group">
-          <button id="delete_group_section_btn">Delete Group</button>
-          <div id="delete_group_section" style="display: none">
-            <select id="delete_group_section_select">
-              <option value="" disabled selected>Select Group</option>
-            </select>
-            <button id="delete_group_section_delete_btn">Delete</button>
+          <div id="delete_group">
+            <button id="delete_group_section_btn">Delete Group</button>
+            <div id="delete_group_section" style="display: none">
+              <select id="delete_group_section_select">
+                <option value="" disabled selected>Select Group</option>
+              </select>
+              <button id="delete_group_section_delete_btn">Delete</button>
+            </div>
           </div>
-        </div>
-        <div id="add_friend_to_group">
-          <button id="add_friend_to_group_section_btn">Add to Group</button>
-          <div id="add_friend_to_group_section" style="display: none">
-            <select id="add_friend_to_group_section_select_group">
-              <option value="" disabled selected>Select Group</option>
-            </select>
-            <select id="add_friend_to_group_section_select_friend">
-              <option value="" disabled selected>Select Friend</option>
-            </select>
-            <button id="add_friend_to_group_section_add_btn">Add</button>
+          <div id="add_friend_to_group">
+            <button id="add_friend_to_group_section_btn">Add to Group</button>
+            <div id="add_friend_to_group_section" style="display: none">
+              <select id="add_friend_to_group_section_select_group">
+                <option value="" disabled selected>Select Group</option>
+              </select>
+              <select id="add_friend_to_group_section_select_friend">
+                <option value="" disabled selected>Select Friend</option>
+              </select>
+              <button id="add_friend_to_group_section_add_btn">Add</button>
+            </div>
           </div>
-        </div>
-        <div id="remove_friend_to_group">
-          <button id="remove_friend_to_group_section_btn">
-            Remove to Group
-          </button>
-          <div id="remove_friend_to_group_section" style="display: none">
-            <select id="remove_friend_to_group_section_select_group">
-              <option value="" disabled selected>Select Group</option>
-            </select>
-            <select id="remove_friend_to_group_section_select_friend">
-              <option value="" disabled selected>Select User</option>
-            </select>
-            <button id="remove_friend_to_group_section_remove_btn">
-              remove
+          <div id="remove_friend_to_group">
+            <button id="remove_friend_to_group_section_btn">
+              Remove to Group
             </button>
+            <div id="remove_friend_to_group_section" style="display: none">
+              <select id="remove_friend_to_group_section_select_group">
+                <option value="" disabled selected>Select Group</option>
+              </select>
+              <select id="remove_friend_to_group_section_select_friend">
+                <option value="" disabled selected>Select User</option>
+              </select>
+              <button id="remove_friend_to_group_section_remove_btn">
+                remove
+              </button>
+            </div>
           </div>
-        </div>
-        <div id="leave_group">
-          <button id="leave_group_section_btn">Leave Group</button>
-          <div id="leave_group_section" style="display: none">
-            <select id="leave_group_section_select_group">
-              <option value="" disabled selected>Select Group</option>
-            </select>
-            <button id="leave_group_section_leave_btn">Leave</button>
+          <div id="leave_group">
+            <button id="leave_group_section_btn">Leave Group</button>
+            <div id="leave_group_section" style="display: none">
+              <select id="leave_group_section_select_group">
+                <option value="" disabled selected>Select Group</option>
+              </select>
+              <button id="leave_group_section_leave_btn">Leave</button>
+            </div>
           </div>
-        </div>
-        <!-- <div id="delete_friend">
+          <!-- <div id="delete_friend">
           <button id="delete_friend_section_btn">Delete Friend</button>
           <div id="delete_friend_section" style="display: none">
             <select id="delete_friend_section_select">
@@ -85,6 +86,7 @@
             <button>Delete</button>
           </div>
         </div> -->
+        </div>
       </div>
       <div id="midSection">
         <div id="chat_section" class="flex_c red_border_1">
@@ -92,17 +94,19 @@
           <div id="chat_box">
             <ui id="chat_list"></ui>
           </div>
-          <div id="new_chat_section">
-            <input
-              type="text"
-              name="new_chat_text"
-              placeholder="enter message"
-              id="input_message"
-            />
-            <button id="send_message_btn">Send</button>
-          </div>
-          <div id="new_chat_section_file">
-            <input type="file" id="input_message_file" />
+          <div id="send_message_input_container">
+            <div id="new_chat_section">
+              <input
+                type="text"
+                name="new_chat_text"
+                placeholder="enter message"
+                id="input_message"
+              />
+              <button id="send_message_btn">Send</button>
+            </div>
+            <div id="new_chat_section_file">
+              <input type="file" id="input_message_file" />
+            </div>
           </div>
         </div>
       </div>

@@ -17,7 +17,7 @@ exports.getPrevGroupMessage = async (req, res) => {
         exclude: ["createdAt", "updatedAt"],
       },
       order: [["createdAt", "DESC"]],
-      limit: 10,
+      limit: 15,
     });
     let fileKeys = [];
     for (let msg of msgs) {

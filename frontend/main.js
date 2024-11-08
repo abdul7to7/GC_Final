@@ -12,8 +12,7 @@ window.addEventListener("DOMContentLoaded", async (e) => {
   const isReceiverGroup = Number(localStorage.getItem("isReceiverGroup"));
   userFriends = await getUserFriends(token);
   userGroups = await getUserGroups(token);
-  console.log(userGroups);
-  //   userGroups.splice(0, 1);
+
   const allUsers = await getAllUsers(token);
   const prevChat = await getPrevChat(token, receiverId, isReceiverGroup);
 
@@ -619,7 +618,7 @@ function addPrevChatToUI(chat) {
 
 function addNewMessageToUI({ message, sender, url }) {
   const chatList = document.getElementById("chat_list");
-  while (chatList.childNodes.length >= 10) {
+  while (chatList.childNodes.length >= 15) {
     chatList.removeChild(chatList.firstChild);
   }
   const textNode = document.createTextNode(message);
@@ -733,7 +732,7 @@ const uploadFile = async (file, token, receiverId, isReceiverGroup) => {
       `${server}/file/getuploadurl?fileName=${file.name}&fileType=${file.type}`
     );
     const { url, fileKey } = await response.json();
-    console.log("url---->", url);
+
     const uploadToAws = await fetch(url, {
       method: "PUT",
       headers: {
@@ -741,12 +740,11 @@ const uploadFile = async (file, token, receiverId, isReceiverGroup) => {
       },
       body: file,
     });
-    console.log("fileKey------->", fileKey);
     if (!(uploadToAws && uploadToAws.ok)) {
       console.error("something went wrong unable to send file");
       return false;
     }
-    console.log(uploadToAws);
+
     if (isReceiverGroup) {
       socket.emit("sendGroupMessage", {
         groupId: receiverId,
@@ -764,16 +762,6 @@ const uploadFile = async (file, token, receiverId, isReceiverGroup) => {
         fileKey,
       });
     }
-
-    // await fetch(`${server}/file/confirm-upload`, {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({
-    //     fileId,
-    //     fileName: file.name,
-    //     fileType: file.type,
-    //   }),
-    // });
   } catch (e) {
     console.log(e);
   }

@@ -52,7 +52,7 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    console.log(req.body);
+    
     const hashed = await bcrypt.hash(req.body.password, 10);
     if (!hashed) {
       return res.status(500).json({ success: false, message: `something went wrong` });
@@ -68,7 +68,6 @@ exports.login = async (req, res, next) => {
       const { password, updatedAt, createdAt, ...userDetails } =
         user.dataValues;
       const token = await generateToken(userDetails);
-      console.log("userDetails---->", userDetails);
       return res.status(201).json({
         success: true,
         message: "login successfully",

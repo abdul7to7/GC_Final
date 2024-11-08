@@ -14,7 +14,7 @@ exports.getChat = async (req, res, next) => {
       },
 
       order: [["createdAt", "DESC"]],
-      limit: 10,
+      limit: 15,
     });
 
     let fileKeys = [];
