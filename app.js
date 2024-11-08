@@ -41,8 +41,6 @@ const verifyUserToken = require("./middlewres/verifyUserToken");
 const { postChat } = require("./controllers/messageController");
 const { postGroupMessage } = require("./controllers/groupController");
 const Friend = require("./models/friendModel");
-const File = require("./models/fileModel");
-const fileOperaions = require("./middlewres/filesOperation");
 const scheduler = require("./util/scheduler");
 const verifyGlobal = require("./util/verifyGlobal");
 
@@ -72,21 +70,6 @@ GroupMessage.belongsTo(User);
 User.hasMany(Friend, { foreignKey: "userId", as: "userFriends" });
 Friend.belongsTo(User, { foreignKey: "userId", as: "userDetails" });
 Friend.belongsTo(User, { foreignKey: "friendId", as: "friendDetails" });
-
-Message.hasOne(File, {
-  as: "associatedMessage",
-  foreignKey: {
-    allowNull: true,
-  },
-  onDelete: "CASCADE",
-});
-GroupMessage.hasOne(File, {
-  as: "associatedGroupMessage",
-  foreignKey: {
-    allowNull: true,
-  },
-  onDelete: "CASCADE",
-});
 
 require("./util/socket")(io);
 

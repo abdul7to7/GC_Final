@@ -14,7 +14,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   localStorage.setItem("token", data.token);
   localStorage.setItem("receiverId", 1);
   localStorage.setItem("receiverName", "Global");
-  localStorage.setItem("isReceiverGroup", true);
+  localStorage.setItem("isReceiverGroup", 1);
   window.location = "./main.html";
 });
 

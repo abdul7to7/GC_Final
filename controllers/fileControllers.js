@@ -19,40 +19,74 @@ exports.generateUploadUrl = async (req, res, next) => {
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
-    Key: fileName, // The name you want the uploaded file to have in S3
+    Key: `${fileId}-${fileName}`, // The name you want the uploaded file to have in S3
     Expires: expiration, // URL expiration time in seconds
     ContentType: fileType, // Required for upload URLs, set according to the file type
     Metadata: {
       "max-file-size": MAX_FILE_SIZE.toString(),
-      "file-id": fileId,
+      fileId: fileId,
       // Store max size as metadata for client validation
     },
   };
 
   try {
     const url = await s3.getSignedUrlPromise("putObject", params);
-    res.status(200).send({ url });
+    res.status(200).send({ url, fileKey: `${fileId}-${fileName}` });
   } catch (error) {
     console.error("Error generating presigned URL", error);
     res.status(500).send("Error generating presigned URL");
   }
 };
 
-exports.confirmUpload = async (req, res) => {
-  const { fileId, fileName, fileType } = req.body;
+// exports.confirmUpload = async (req, res) => {
+//   const { fileId, fileName, fileType } = req.body;
+
+//   try {
+//     await File.create({
+//       id: fileId,
+//       name: fileName,
+//       type: fileType,
+//       uploadedAt: new Date(),
+//       status: "uploaded",
+//     });
+
+//     res.status(200).send({ message: "Upload confirmed" });
+//   } catch (error) {
+//     console.error("Error saving file to database", error);
+//     res.status(500).send("Error saving file to database");
+//   }
+// };
+
+exports.getDownloadUrl = async ({ fileKey }) => {
+  // Get fileId and fileName from client request
+  const params = {
+    Bucket: process.env.AWS_BUCKET_NAME,
+    Key: fileKey,
+    Expires: 60 * 5, // URL expires in 5 minutes
+  };
 
   try {
-    await File.create({
-      id: fileId,
-      name: fileName,
-      type: fileType,
-      uploadedAt: new Date(),
-      status: "uploaded",
-    });
-
-    res.status(200).send({ message: "Upload confirmed" });
+    const downloadUrl = await s3.getSignedUrlPromise("getObject", params);
+    return downloadUrl;
   } catch (error) {
-    console.error("Error saving file to database", error);
-    res.status(500).send("Error saving file to database");
+    console.log("error generating download url");
+    return "";
   }
+};
+
+exports.getBatchDownloadUrls = async (fileKeys) => {
+  const expiration = 60 * 5; // 5 minutes expiration time
+  const downloadUrls = {};
+
+  for (const key of fileKeys) {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: key,
+      Expires: expiration,
+    };
+    const url = await s3.getSignedUrlPromise("getObject", params);
+    downloadUrls[key] = url; // Map fileKey to URL directly
+  }
+
+  return downloadUrls;
 };

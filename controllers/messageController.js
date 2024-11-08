@@ -1,7 +1,7 @@
-const File = require("../models/fileModel");
 const Message = require("../models/messageModel");
 const User = require("../models/userModel");
 const upload = require("../middlewres/filesOperation");
+const { getBatchDownloadUrls } = require("./fileControllers");
 
 exports.getChat = async (req, res, next) => {
   try {
@@ -12,37 +12,24 @@ exports.getChat = async (req, res, next) => {
       where: {
         roomId: roomId,
       },
-      include: [
-        {
-          model: File,
-          as: "associatedMessage",
-          attributes: ["key", "fileName", "fileUrl"],
-          required: false,
-        },
-        {
-          model: User,
-          attributes: ["username"],
-        },
-      ],
+
       order: [["createdAt", "DESC"]],
       limit: 10,
     });
-    for (const msg of msgs) {
-      if (msg.associatedMessage) {
-        try {
-          const fileUrl = await upload.generatePresignedUrl(
-            msg.associatedMessage.key
-          );
-          msg.associatedMessage.dataValues = {
-            name: msg.associatedMessage.fileName,
-            url: fileUrl,
-          };
-        } catch (error) {
-          return res.json({
-            success: false,
-            message: `something went wrong:${e}`,
-          });
-        }
+
+    let fileKeys = [];
+    for (let msg of msgs) {
+      if (msg.dataValues.fileKey) {
+        fileKeys.push(msg.dataValues.fileKey); // Collect fileKeys
+      }
+    }
+
+    const batch = await getBatchDownloadUrls(fileKeys);
+
+    for (let msg of msgs) {
+      const fileKey = msg.dataValues.fileKey;
+      if (fileKey && batch[fileKey]) {
+        msg.dataValues.url = batch[fileKey]; // Assign the correct URL from batch
       }
     }
     return res.json({ msgs: msgs.reverse() });
@@ -54,13 +41,22 @@ exports.getChat = async (req, res, next) => {
   //   console.log(typeof req.user.id);
 };
 
-exports.postChat = async ({ roomId, userId, receiverId, content }) => {
+exports.postChat = async ({
+  roomId,
+  userId,
+  receiverId,
+  content,
+  isFile,
+  fileKey,
+}) => {
   try {
     const msg = await Message.create({
       message: content,
       userId,
       receiverId: receiverId,
       roomId,
+      isFile,
+      fileKey,
     });
     return { success: true, msg: msg };
   } catch (e) {

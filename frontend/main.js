@@ -9,7 +9,7 @@ window.addEventListener("DOMContentLoaded", async (e) => {
   const token = localStorage.getItem("token");
   const receiverId = localStorage.getItem("receiverId");
   const receiverName = localStorage.getItem("receiverName");
-  const isReceiverGroup = localStorage.getItem("isReceiverGroup");
+  const isReceiverGroup = Number(localStorage.getItem("isReceiverGroup"));
   userFriends = await getUserFriends(token);
   userGroups = await getUserGroups(token);
   console.log(userGroups);
@@ -29,24 +29,12 @@ window.addEventListener("DOMContentLoaded", async (e) => {
   document.getElementById("chatting_with").innerText = receiverName;
 });
 
-socket.on("newGroupMessage", ({ message, sender, file }) => {
-  if (message.length > 0) {
-    addNewMessageToUI({ message, sender });
-  }
-
-  if (file && file.url) {
-    addFileToUI(file);
-  }
+socket.on("newGroupMessage", ({ message, sender, url }) => {
+  addNewMessageToUI({ message, sender, url });
 });
 
-socket.on("newPrivateMessage", ({ message, sender, file }) => {
-  if (message.length > 0) {
-    addNewMessageToUI({ message, sender });
-  }
-
-  if (file && file.url) {
-    addFileToUI(file);
-  }
+socket.on("newPrivateMessage", ({ message, sender, url }) => {
+  addNewMessageToUI({ message, sender, url });
 });
 
 socket.on("error", ({ message }) => {
@@ -59,46 +47,35 @@ document
     const message = document.getElementById("input_message").value;
     const receiverId = localStorage.getItem("receiverId");
     const token = localStorage.getItem("token");
-    const isReceiverGroup = localStorage.getItem("isReceiverGroup");
+    const isReceiverGroup = Number(localStorage.getItem("isReceiverGroup"));
     const userId = localStorage.getItem("userId");
 
     const fileInput = document.getElementById("input_message_file");
     const file = fileInput.files[0];
 
     if (file) {
-      uploadFile(file);
+      await uploadFile(file, token, receiverId, isReceiverGroup);
+      addNewMessageToUI({ message: file.name, sender: userId, url: "none" });
     }
+    if (!message || message == "") {
+      return;
+    }
+    addNewMessageToUI({ message, sender: userId });
 
-    if (isReceiverGroup == "true") {
+    if (isReceiverGroup) {
       socket.emit("sendGroupMessage", {
         groupId: receiverId,
         token,
         content: message,
-        file: {
-          fieldName: "file",
-          name: file?.name,
-          type: file?.type,
-          data: file,
-        },
+        isFile: false,
       });
     } else {
       socket.emit("sendPrivateMessage", {
         content: message,
         token,
         receiverId,
-        file: {
-          fieldName: "file",
-          name: file?.name,
-          type: file?.type,
-          data: file,
-        },
+        isFile: false,
       });
-    }
-    if (message != null && message != "") {
-      addNewMessageToUI({ message, sender: userId });
-    }
-    if (file) {
-      addFileToUI(file);
     }
   });
 
@@ -108,7 +85,7 @@ document
     if (e.target.classList.contains("friends_list_item")) {
       const receiverId = e.target.getAttribute("friendid");
       const token = localStorage.getItem("token");
-      localStorage.setItem("isReceiverGroup", false);
+      localStorage.setItem("isReceiverGroup", 0);
       localStorage.setItem("receiverId", receiverId);
       document.getElementById("chatting_with").innerText = e.target.innerText;
       localStorage.setItem("receiverName", e.target.innerText);
@@ -124,7 +101,7 @@ document
     if (e.target.classList.contains("group_item")) {
       const receiverId = e.target.getAttribute("groupid");
       const token = localStorage.getItem("token");
-      localStorage.setItem("isReceiverGroup", true);
+      localStorage.setItem("isReceiverGroup", 1);
       localStorage.setItem("receiverId", receiverId);
       document.getElementById("chatting_with").innerText = e.target.innerText;
       localStorage.setItem("receiverName", e.target.innerText);
@@ -450,10 +427,10 @@ async function getAllUsers(token) {
   }
 }
 
-async function getPrevChat(token, receiverId = 1, isGroup = "true") {
+async function getPrevChat(token, receiverId = 1, isGroup = 1) {
   try {
     receiverId = parseInt(receiverId);
-    if (isGroup == "true") {
+    if (isGroup) {
       let res = await fetch(`${server}/gc/chat/${receiverId}`, {
         headers: {
           token: token,
@@ -545,39 +522,44 @@ function addPrevChatToUI(chat) {
   while (chatList.childNodes.length > 0) {
     chatList.removeChild(chatList.firstChild);
   }
-  chat.msgs.forEach((msg) => {
+  chat?.msgs?.forEach((msg) => {
     if (msg.message != null && msg.message != "") {
-      const textNode = document.createTextNode(msg.message);
-      const li = document.createElement("li");
-      li.appendChild(textNode);
-      chatList.appendChild(li);
-    }
-
-    if (msg.associatedGroupMessage) {
-      addFileToUI(msg.associatedGroupMessage);
-    } else if (msg.associatedMessage) {
-      addFileToUI(msg.associatedMessage);
+      // const textNode = document.createTextNode(msg.message);
+      // const li = document.createElement("li");
+      // li.appendChild(textNode);
+      // chatList.appendChild(li);
+      addNewMessageToUI({
+        message: msg.message,
+        sender: msg.userId,
+        url: msg.url,
+      });
     }
   });
 }
 
-function addNewMessageToUI({ message, sender }) {
+function addNewMessageToUI({ message, sender, url }) {
   const chatList = document.getElementById("chat_list");
   while (chatList.childNodes.length >= 10) {
     chatList.removeChild(chatList.firstChild);
   }
   const textNode = document.createTextNode(message);
   const li = document.createElement("li");
-  li.appendChild(textNode);
+  if (url) {
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.appendChild(textNode);
+    li.appendChild(a);
+  } else {
+    li.appendChild(textNode);
+  }
   chatList.appendChild(li);
 }
 
-function addFileToUI(file) {
+function addFileToUI(fileName, url) {
   const chatList = document.getElementById("chat_list");
   const li = document.createElement("li");
-  li.innerHTML = `<a href=${file.url} download=${file.name}>${file.name}</a>`;
+  li.innerHTML = `<a href=${url} download=${fileName}>${fileName}</a>`;
   li.classList.add("file");
-  if (file.data) li.value = file.data;
   chatList.appendChild(li);
 }
 
@@ -660,7 +642,7 @@ async function leaveGroup(groupId) {
   }
 }
 
-const uploadFile = async (file) => {
+const uploadFile = async (file, token, receiverId, isReceiverGroup) => {
   try {
     const MAX_FILE_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_FILE_SIZE) {
@@ -670,7 +652,7 @@ const uploadFile = async (file) => {
     const response = await fetch(
       `${server}/file/getuploadurl?fileName=${file.name}&fileType=${file.type}`
     );
-    const { url, fileId } = await response.json();
+    const { url, fileKey } = await response.json();
     console.log("url---->", url);
     const uploadToAws = await fetch(url, {
       method: "PUT",
@@ -679,16 +661,39 @@ const uploadFile = async (file) => {
       },
       body: file,
     });
+    console.log("fileKey------->", fileKey);
+    if (!(uploadToAws && uploadToAws.ok)) {
+      console.error("something went wrong unable to send file");
+      return false;
+    }
     console.log(uploadToAws);
-    await fetch(`${server}/file/confirm-upload`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        fileId,
-        fileName: file.name,
-        fileType: file.type,
-      }),
-    });
+    if (isReceiverGroup) {
+      socket.emit("sendGroupMessage", {
+        groupId: receiverId,
+        token,
+        content: file.name,
+        isFile: true,
+        fileKey,
+      });
+    } else {
+      socket.emit("sendPrivateMessage", {
+        receiverId,
+        token,
+        content: file.name,
+        isFile: true,
+        fileKey,
+      });
+    }
+
+    // await fetch(`${server}/file/confirm-upload`, {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify({
+    //     fileId,
+    //     fileName: file.name,
+    //     fileType: file.type,
+    //   }),
+    // });
   } catch (e) {
     console.log(e);
   }

@@ -5,6 +5,7 @@ const verifyUserToken = require("../middlewres/verifyUserToken");
 const fileOperations = require("../middlewres/filesOperation");
 const Friend = require("../models/friendModel");
 const GroupMembers = require("../models/groupMembersModel");
+const { getDownloadUrl } = require("../controllers/fileControllers");
 
 module.exports = (io) => {
   io.on("connection", (socket) => {
@@ -32,7 +33,7 @@ module.exports = (io) => {
 
     socket.on(
       "sendPrivateMessage",
-      async ({ token, receiverId, content, file }) => {
+      async ({ token, receiverId, content, isFile, fileKey }) => {
         const user = await verifyUserToken(token);
         if (!user) {
           socket.emit("error", { message: "Failed to send message." });
@@ -52,18 +53,18 @@ module.exports = (io) => {
             userId: user.id,
             receiverId,
             content,
+            isFile,
+            fileKey,
           });
-          let fileuploaded;
-          if (file?.data) {
-            fileuploaded = await fileOperations.fileUpload(file, null, res.id);
+          let url;
+          if (isFile) {
+            url = await getDownloadUrl({ fileKey });
           }
+
           socket.to(roomId).emit("newPrivateMessage", {
             message: content,
             sender: user.id,
-            file: fileuploaded && {
-              name: fileuploaded.dataValues.fileName,
-              url: fileuploaded.preSignedUrl,
-            },
+            url,
           });
         } catch (error) {
           console.error("Error sending private message:", error);
@@ -90,43 +91,57 @@ module.exports = (io) => {
       console.log(`User ${socket.id} joined group chat room ${groupId}`);
     });
 
-    socket.on("sendGroupMessage", async ({ groupId, token, content, file }) => {
-      const user = await verifyUserToken(token);
+    socket.on(
+      "sendGroupMessage",
+      async ({ groupId, token, content, isFile, fileKey }) => {
+        console.log("fileKey backend socket", fileKey);
+        const user = await verifyUserToken(token);
 
-      if (!user) return socket.emit("error", { message: "Invalid token" });
+        if (!user) return socket.emit("error", { message: "Invalid token" });
 
-      if (!groupId == 1 && !socket.rooms.has(groupId)) {
-        return socket.emit("error", {
-          message: "Join the group before sending messages",
-        });
-      }
+        if (!groupId == 1 && !socket.rooms.has(groupId)) {
+          return socket.emit("error", {
+            message: "Join the group before sending messages",
+          });
+        }
 
-      console.log(`here ${groupId}`);
+        console.log(`here ${groupId}`);
 
-      try {
-        let res = await postGroupMessage({ groupId, userId: user.id, content });
-        if (!res.success)
-          return socket
+        try {
+          let res = await postGroupMessage({
+            groupId,
+            userId: user.id,
+            content,
+            isFile,
+            fileKey,
+          });
+          if (!res.success)
+            return socket
+              .to(groupId)
+              .emit("error", { message: "Failed to send group message." });
+
+          // let fileuploaded;
+          // if (file?.data) {
+          //   fileuploaded = await fileOperations.fileUpload(file, res.id, null);
+          // }
+          let url;
+          if (isFile) {
+            url = await getDownloadUrl({ fileKey });
+          }
+
+          socket.to(groupId).emit("newGroupMessage", {
+            message: content,
+            sender: user.username,
+            url: url,
+          });
+        } catch (error) {
+          console.error("Error sending group message:", error);
+          socket
             .to(groupId)
             .emit("error", { message: "Failed to send group message." });
-
-        // let fileuploaded;
-        // if (file?.data) {
-        //   fileuploaded = await fileOperations.fileUpload(file, res.id, null);
-        // }
-
-        socket.to(groupId).emit("newGroupMessage", {
-          message: content,
-          sender: user.username,
-          file: "file",
-        });
-      } catch (error) {
-        console.error("Error sending group message:", error);
-        socket
-          .to(groupId)
-          .emit("error", { message: "Failed to send group message." });
+        }
       }
-    });
+    );
 
     socket.on("disconnect", () => {
       console.log(`${socket.id} disconnected`);
