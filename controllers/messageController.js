@@ -20,7 +20,7 @@ exports.getChat = async (req, res, next) => {
     let fileKeys = [];
     for (let msg of msgs) {
       if (msg.dataValues.fileKey) {
-        fileKeys.push(msg.dataValues.fileKey); // Collect fileKeys
+        fileKeys.push(msg.dataValues.fileKey);
       }
     }
 
@@ -29,16 +29,13 @@ exports.getChat = async (req, res, next) => {
     for (let msg of msgs) {
       const fileKey = msg.dataValues.fileKey;
       if (fileKey && batch[fileKey]) {
-        msg.dataValues.url = batch[fileKey]; // Assign the correct URL from batch
+        msg.dataValues.url = batch[fileKey];
       }
     }
     return res.json({ msgs: msgs.reverse() });
   } catch (e) {
     return res.json({ success: false, message: `something went wrong:${e}` });
   }
-
-  //   console.log(typeof recvId);
-  //   console.log(typeof req.user.id);
 };
 
 exports.postChat = async ({

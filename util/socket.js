@@ -22,7 +22,7 @@ module.exports = (io) => {
         },
       });
 
-      if (!friend && !friend.isFriend) {
+      if (!friend && !friend?.isFriend) {
         return socket.emit("error", { message: "Not friends with this user" });
       }
 

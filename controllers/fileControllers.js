@@ -38,27 +38,7 @@ exports.generateUploadUrl = async (req, res, next) => {
   }
 };
 
-// exports.confirmUpload = async (req, res) => {
-//   const { fileId, fileName, fileType } = req.body;
-
-//   try {
-//     await File.create({
-//       id: fileId,
-//       name: fileName,
-//       type: fileType,
-//       uploadedAt: new Date(),
-//       status: "uploaded",
-//     });
-
-//     res.status(200).send({ message: "Upload confirmed" });
-//   } catch (error) {
-//     console.error("Error saving file to database", error);
-//     res.status(500).send("Error saving file to database");
-//   }
-// };
-
 exports.getDownloadUrl = async ({ fileKey }) => {
-  // Get fileId and fileName from client request
   const params = {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: fileKey,
@@ -85,8 +65,43 @@ exports.getBatchDownloadUrls = async (fileKeys) => {
       Expires: expiration,
     };
     const url = await s3.getSignedUrlPromise("getObject", params);
-    downloadUrls[key] = url; // Map fileKey to URL directly
+    downloadUrls[key] = url;
   }
 
   return downloadUrls;
+};
+
+exports.deleteAllFilesFromBucket = async () => {
+  try {
+    // Step 1: List all objects in the bucket
+    const listParams = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+    };
+
+    const listedObjects = await s3.listObjectsV2(listParams).promise();
+
+    if (listedObjects.Contents.length === 0) {
+      console.log("No files found in the bucket.");
+      return;
+    }
+
+    // Step 2: Prepare the objects to be deleted
+    const deleteParams = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Delete: {
+        Objects: listedObjects.Contents.map((obj) => ({ Key: obj.Key })),
+      },
+    };
+
+    // Step 3: Delete the objects
+    await s3.deleteObjects(deleteParams).promise();
+    console.log("All files deleted successfully.");
+
+    // If there are more than 1000 objects, paginate and delete them as well
+    if (listedObjects.IsTruncated) {
+      await deleteAllFilesFromBucket(); // Recursively delete remaining objects
+    }
+  } catch (err) {
+    console.error("Error deleting files:", err);
+  }
 };

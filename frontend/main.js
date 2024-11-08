@@ -77,6 +77,7 @@ document
         isFile: false,
       });
     }
+    document.getElementById("input_message").value = "";
   });
 
 document
@@ -129,6 +130,9 @@ document
     e.preventDefault();
     const newGroupName = document.getElementById("new_group_name").value;
     await postCreateGroup(newGroupName);
+    localStorage.setItem("receiverId", 1);
+    localStorage.setItem("receiverName", "Global");
+    localStorage.setItem("isReceiverGroup", 1);
     window.location.reload(true);
   });
 
@@ -162,6 +166,9 @@ document
   .addEventListener("click", async (e) => {
     const select = document.getElementById("delete_group_section_select");
     await deleteGroup(select.value);
+    localStorage.setItem("receiverId", 1);
+    localStorage.setItem("receiverName", "Global");
+    localStorage.setItem("isReceiverGroup", 1);
     window.location.reload();
   });
 
@@ -291,6 +298,9 @@ document
     // await deleteGroup(select_group.value);
     await addFriendToGroup(select_group.value, select_friend.value);
 
+    localStorage.setItem("receiverId", 1);
+    localStorage.setItem("receiverName", "Global");
+    localStorage.setItem("isReceiverGroup", 1);
     window.location.reload(true);
   });
 
@@ -305,6 +315,9 @@ document
     );
     // await deleteGroup(select_group.value);
     await removeUserToGroup(select_group.value, select_friend.value);
+    localStorage.setItem("receiverId", 1);
+    localStorage.setItem("receiverName", "Global");
+    localStorage.setItem("isReceiverGroup", 1);
     window.location.reload(true);
   });
 
@@ -315,6 +328,9 @@ document
       "leave_group_section_select_group"
     );
     await leaveGroup(select_group.value);
+    localStorage.setItem("receiverId", 1);
+    localStorage.setItem("receiverName", "Global");
+    localStorage.setItem("isReceiverGroup", 1);
     window.location.reload(true);
   });
 
@@ -327,44 +343,108 @@ document.getElementById("all_users").addEventListener("click", async (e) => {
   } else if (e.target.classList.contains("add_friend_btn")) {
     await addFriend(token, userId);
   } else if (e.target.classList.contains("accept_btn")) {
-    acceptFriend(token, userId);
-  }
-  if (e.target.classList.contains("all_users_list_item_btn")) {
-    window.location.reload();
+    let username = "";
+    const usersList = document.getElementById("all_users_list");
+    for (let child of usersList.childNodes) {
+      if (child.getAttribute("userid") == userId) {
+        username = child.firstChild.textContent;
+        console.log(username);
+      }
+    }
+    await acceptFriend(token, userId, username);
   }
 });
 
 async function removeFriend(token, userId) {
   try {
-    fetch(`${server}/friend/unfriend/${userId}`, {
+    await fetch(`${server}/friend/unfriend/${userId}`, {
       headers: {
         token: token,
       },
     });
+    removeFriendFromUI(userId);
   } catch (e) {
     console.log(e);
   }
 }
+
+function removeFriendFromUI(friendId) {
+  const userFriendList = document.getElementById("user_friends_list");
+  for (let child of userFriendList.childNodes) {
+    if (child.getAttribute("friendid") == friendId) {
+      userFriendList.removeChild(child);
+      const btn = document.querySelector(`button[userid="${friendId}"]`);
+      btn.textContent = "add friend";
+      btn.classList = "add_friend_btn all_users_list_item_btn";
+      return;
+    }
+  }
+}
+
 async function addFriend(token, userId) {
   try {
-    fetch(`${server}/friend/send_request/${userId}`, {
+    await fetch(`${server}/friend/send_request/${userId}`, {
       headers: {
         token: token,
       },
     });
+    addSentRequestToUI(userId);
   } catch (e) {
     console.log(e);
   }
 }
-async function acceptFriend(token, userId) {
+function addSentRequestToUI(userId) {
+  const usersList = document.getElementById("all_users_list");
+  for (let child of usersList.childNodes) {
+    if (child.getAttribute("userid") == userId) {
+      const btn = document.querySelector(`button[userid="${userId}"]`);
+      let parent = btn.parentNode;
+      parent.removeChild(btn);
+
+      parent.textContent += "  requested";
+      return;
+    }
+  }
+}
+
+async function acceptFriend(token, userId, username) {
   try {
-    fetch(`${server}/friend/accept_request/${userId}`, {
+    await fetch(`${server}/friend/accept_request/${userId}`, {
       headers: {
         token: token,
       },
     });
+    acceptFriendToUI(userId, username);
   } catch (e) {
     console.log(e);
+  }
+}
+
+function acceptFriendToUI(userId, username) {
+  const userFriendList = document.getElementById("user_friends_list");
+  const li = document.createElement("li");
+  li.setAttribute("userid", userId);
+  li.setAttribute("friendid", userId);
+  const textNode = document.createTextNode(username);
+  li.appendChild(textNode);
+  li.classList = "friends_list_item";
+  userFriendList.appendChild(li);
+  const newFriend = {
+    friendDetails: {
+      name: username,
+      mail: "",
+    },
+    friendId: userId,
+  };
+  userFriends.push(newFriend);
+  const usersList = document.getElementById("all_users_list");
+  for (let child of usersList.childNodes) {
+    if (child.getAttribute("userid") == userId) {
+      const btn = document.querySelector(`button[userid="${userId}"]`);
+      btn.textContent = "remove";
+      btn.classList = "remove_btn all_users_list_item_btn";
+      return;
+    }
   }
 }
 

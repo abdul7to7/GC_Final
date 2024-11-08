@@ -11,7 +11,6 @@ const io = new Server(server, {
     origin: "*",
   },
 });
-// app.use(bodyParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -37,11 +36,7 @@ const friendRoutes = require("./routes/friendRoutes");
 const fileRoutes = require("./routes/fileRoutes");
 
 const authVerifyToken = require("./middlewres/authVerifyToken");
-const verifyUserToken = require("./middlewres/verifyUserToken");
-const { postChat } = require("./controllers/messageController");
-const { postGroupMessage } = require("./controllers/groupController");
 const Friend = require("./models/friendModel");
-const scheduler = require("./util/scheduler");
 const verifyGlobal = require("./util/verifyGlobal");
 
 app.use("/auth", authRoutes);
@@ -82,6 +77,9 @@ sequelize
   })
   .then(() => {
     server.listen(process.env.PORT || 3000);
+  })
+  .then(() => {
+    require("./util/scheduler");
   })
   .then(() => {
     console.log("server is running");

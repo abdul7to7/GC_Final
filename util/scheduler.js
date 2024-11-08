@@ -1,5 +1,6 @@
 const cron = require("node-cron");
 const deleteOldMessages = require("./deleteOldMessages");
+const { deleteAllFilesFromBucket } = require("../controllers/fileControllers");
 
 // Schedule the job to run daily at midnight in the specified timezone
 const timezone = "Asia/Kolkata";
@@ -9,6 +10,7 @@ cron.schedule(
   () => {
     console.log("Running the scheduled job to delete old messages...");
     deleteOldMessages();
+    deleteAllFilesFromBucket();
   },
   {
     scheduled: true,

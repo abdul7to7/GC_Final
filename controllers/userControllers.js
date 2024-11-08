@@ -6,10 +6,10 @@ const { Op } = require("sequelize");
 
 exports.getAllUsersWithFriendStatus = async (req, res, next) => {
   try {
-    const currentUserId = req.user.id; // ID of the current logged-in user
+    const currentUserId = req.user.id;
 
     const users = await User.findAll({
-      attributes: ["id", "username"], // Select the attributes you want to retrieve
+      attributes: ["id", "username"],
       include: [
         {
           model: Friend,
