@@ -1,3 +1,4 @@
 UI
 download link for sender while mainting security for unauthorised download from aws
 lazy loading for old messages
+using hooks to delete cascade files from aws when deleting a group along with its messages

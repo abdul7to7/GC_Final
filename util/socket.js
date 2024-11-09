@@ -2,7 +2,6 @@
 const { postChat } = require("../controllers/messageController");
 const { postGroupMessage } = require("../controllers/groupMessageController");
 const verifyUserToken = require("../middlewres/verifyUserToken");
-const fileOperations = require("../middlewres/filesOperation");
 const Friend = require("../models/friendModel");
 const GroupMembers = require("../models/groupMembersModel");
 const { getDownloadUrl } = require("../controllers/fileControllers");

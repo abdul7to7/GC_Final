@@ -1,6 +1,5 @@
 const GroupMessage = require("../models/groupMessageModel");
 const User = require("../models/userModel");
-const upload = require("../middlewres/filesOperation");
 const { getBatchDownloadUrls } = require("./fileControllers");
 
 exports.getPrevGroupMessage = async (req, res) => {

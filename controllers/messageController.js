@@ -1,6 +1,5 @@
 const Message = require("../models/messageModel");
 const User = require("../models/userModel");
-const upload = require("../middlewres/filesOperation");
 const { getBatchDownloadUrls } = require("./fileControllers");
 
 exports.getChat = async (req, res, next) => {

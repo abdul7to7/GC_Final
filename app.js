@@ -2,6 +2,10 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 const app = express();
+const compression = require("compression");
+const morgan = require("morgan");
+const fs = require("fs");
+const path = require("path");
 const http = require("http");
 const { Server } = require("socket.io");
 const server = http.createServer(app);
@@ -19,6 +23,14 @@ app.use(
     origin: "*",
   })
 );
+
+app.use(compression());
+
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
+app.use(morgan("combined", { stream: accessLogStream }));
 
 const sequelize = require("./util/db");
 
@@ -45,6 +57,10 @@ app.use("/dm", authVerifyToken, msgRoutes);
 app.use("/gc", authVerifyToken, groupRoutes);
 app.use("/friend", authVerifyToken, friendRoutes);
 app.use("/file", fileRoutes);
+
+app.use("/", (req, res) => {
+  res.status(404).send("Page not found");
+});
 
 User.hasMany(Message, {
   onDelete: "CASCADE",
